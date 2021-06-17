@@ -90,4 +90,9 @@ $(document).ready(function() {
     }
   }, 5000)
 
+  // function to add notification badge
+  // function addBadge(){
+  //   chrome.browserAction.setBadgeText({text: 'O'});
+  // }
+
 })
