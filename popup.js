@@ -1,28 +1,44 @@
-// Initialize butotn with users's prefered color
-let changeColor = document.getElementById("changeColor");
+$(document).ready(function() {
 
-chrome.storage.sync.get("color", ({ color }) => {
-  changeColor.style.backgroundColor = color;
-});
+  let statusColor = {
+    'done': 'green',
+    'pending': '#dec04a',
+  }
 
-// When the button is clicked, inject setPageBackgroundColor into current page
-changeColor.addEventListener("click", async () => {
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    function: setPageBackgroundColor,
+  // create new process
+  $("#create-form").submit(function(e) {
+    e.preventDefault();
+
+    let form = $(this);
+    let url = form.attr('action');
+    let formValues = form.serialize();
+    
+    $.ajax({
+      type: "POST",
+      url: url,
+      data: formValues,
+      // crossDomain: false,
+      success: function(data)
+      {
+        let id = data.data
+        let text = formValues.split('=')[1]
+
+        // add item in DOM
+        $('#list-container').prepend($(`<div id=${data.data}><div class="text">${text}</div><div class="status" style="color:${statusColor['pending']}">pending</div></div>`));
+
+        // add item in storage
+        chrome.storage.sync.get(['items'], obj => { 
+        let items = [...obj.items]
+        items.push({id: id, text: text, status: 'pending'})
+        chrome.storage.sync.set({items})
+        })
+      }
+    });
   });
-});
-
-// The body of this function will be execuetd as a content script inside the
-// current page
-function setPageBackgroundColor() {
-  chrome.storage.sync.get("color", ({ color }) => {
-    document.body.style.backgroundColor = color;
-  });
-}
 
 function submitForm(e) {
   console.log(e)
 }
+
+})
