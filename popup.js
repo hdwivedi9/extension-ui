@@ -5,6 +5,15 @@ $(document).ready(function() {
     'pending': '#dec04a',
   }
 
+  // load processes from storage when extension open after collapsing
+  chrome.storage.sync.get(['items'], obj => { 
+    let items = [...obj.items]
+    if(items.length > 0){
+      items.forEach(item => {
+        $('#list-container').prepend($(`<div id=${item.id}><div class="text">${item.text}</div><div class="status" style="color:${statusColor[item.status]}">${item.status}</div></div>`));
+      })
+    }
+   })
 
   // create new process
   $("#create-form").submit(function(e) {
