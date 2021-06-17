@@ -37,8 +37,48 @@ $(document).ready(function() {
     });
   });
 
-function submitForm(e) {
-  console.log(e)
-}
+  // Long polling for status check of processes
+  setInterval(() => {
+    let ids = []
+    $("#list-container > div").each((index, elem) => {
+      if($(elem).children('.status').text() == "pending"){
+      ids.push("ids[]="+$(elem).attr("id"))}
+    });
+
+    let url = 'http://localhost:8000/status?' + ids.join("&")
+    console.log(ids)
+
+    if(ids.length > 0){
+        $.ajax({
+          type: "GET",
+          url: url,
+          // crossDomain: false,
+          success: function(data)
+          {
+            let status = data.data
+
+            // update DOM if any process completed
+            Object.keys(status).forEach(id => {
+              if(status[id] == "done") {
+                $("#"+id + " > .status").text("done");
+                $("#"+id + " > .status").css("color", statusColor['done']);
+                // addBadge();
+              }
+            })
+
+            // update storage
+            chrome.storage.sync.get(['items'], obj => { 
+              let items = [...obj.items]
+              items = items.map(item => {
+                if(status[item.id])
+                  return {...item, status: status[item.id]}
+                return item
+              })
+              chrome.storage.sync.set({items})
+            })
+          }
+        })
+    }
+  }, 5000)
 
 })
